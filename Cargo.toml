@@ -1,0 +1,8 @@
+[package]
+name = "rusted_laser_beams"
+version = "0.1.0"
+authors = ["Landon Fowles <landon@lfowles.org>"]
+
+[dependencies]
+cgmath = "0.15.0"
+image = "0.18.0"
