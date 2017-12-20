@@ -1,62 +1,26 @@
-use std::fs::File;
-
 extern crate cgmath;
 
 use cgmath::Vector3;
 use cgmath::prelude::*;
 use cgmath::vec3;
 
+use std::default::Default;
+
+mod camera;
+
+use camera::Camera;
+
+mod hittable;
 mod sphere;
-
-use sphere::Sphere;
-
 mod hittable_list;
 
+use hittable::Hittable;
+use sphere::Sphere;
 use hittable_list::HittableList;
-
-fn main() {
-    let nx = 800;
-    let ny = 400;
-    let mut pixels = Vec::new();
-
-    let lower_left_corner = vec3(-2.0, -1.0, -1.0);
-    let horizontal = vec3(4.0, 0.0, 0.0);
-    let vertical = vec3(0.0, 2.0, 0.0);
-    let origin = vec3(0.0, 0.0, 0.0);
-    let world = HittableList {
-        list: vec![
-            Box::new(Sphere { center: vec3(0.0, 0.0, -1.0), radius: 0.5 }),
-            Box::new(Sphere { center: vec3(0.0, -100.5, -1.0), radius: 100.0 }),
-        ]
-    };
-
-    for j in (0..ny).rev() {
-        for i in 0..nx {
-            let u = i as f32 / nx as f32;
-            let v = j as f32 / ny as f32;
-            let r = Ray {
-                origin,
-                direction: lower_left_corner + u * horizontal + v * vertical,
-            };
-            let color = color(&r, &world) * 255.99;
-
-            pixels.push(color.x as u8);
-            pixels.push(color.y as u8);
-            pixels.push(color.z as u8);
-        }
-    }
-
-    write_png("test", &pixels, (nx, ny))
-        .expect("error writing PNG file");
-}
 
 mod ray;
 
 use ray::Ray;
-
-mod hittable;
-
-use hittable::Hittable;
 
 fn get_background(r: &Ray) -> Vector3<f32> {
     let unit_direction = r.direction.normalize();
@@ -71,14 +35,47 @@ fn color(r: &Ray, hittable: &Hittable) -> Vector3<f32> {
     }
 }
 
+fn main() {
+    let nx = 800;
+    let ny = 400;
+    let mut pixels = Vec::new();
+
+    let world = HittableList {
+        list: vec![
+            Box::new(Sphere { center: vec3(0.0, 0.0, -1.0), radius: 0.5 }),
+            Box::new(Sphere { center: vec3(0.0, -100.5, -1.0), radius: 100.0 }),
+        ]
+    };
+
+    let camera: Camera = Default::default();
+
+    for j in (0..ny).rev() {
+        for i in 0..nx {
+            let u = i as f32 / nx as f32;
+            let v = j as f32 / ny as f32;
+            let r = camera.get_ray(u, v);
+
+            let color = color(&r, &world) * 255.99;
+
+            pixels.push(color.x as u8);
+            pixels.push(color.y as u8);
+            pixels.push(color.z as u8);
+        }
+    }
+
+    write_png("test", &pixels, (nx, ny))
+        .expect("error writing PNG file");
+}
+
 extern crate image;
 
 /* Programming Rust p. 34 */
 fn write_png(filename: &str, pixels: &[u8], bounds: (usize, usize))
              -> Result<(), std::io::Error>
 {
-    use image::ColorType;
+    use std::fs::File;
     use image::png::PNGEncoder;
+    use image::ColorType;
 
     let output = File::create(filename.to_owned() + ".png")?;
 
