@@ -4,5 +4,6 @@ version = "0.1.0"
 authors = ["Landon Fowles <landon@lfowles.org>"]
 
 [dependencies]
-cgmath = "0.15.0"
-image = "0.18.0"
+cgmath = "0.15"
+image = "0.18"
+rand = "0.4"

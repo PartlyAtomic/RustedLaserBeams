@@ -12,13 +12,10 @@ impl Hittable for HittableList {
         let mut closest_hit: Option<HitRecord> = None;
         let mut closest = t_max;
         for hittable in &self.list {
-            match hittable.hit(ray, t_min, closest) {
-                Some(record) => {
-                    closest = record.t;
-                    closest_hit = Some(record);
-                }
-                None => ()
-            };
+            if let Some(record) = hittable.hit(ray, t_min, closest) {
+                closest = record.t;
+                closest_hit = Some(record);
+            }
         }
 
         closest_hit

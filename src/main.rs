@@ -4,6 +4,8 @@ use cgmath::Vector3;
 use cgmath::prelude::*;
 use cgmath::vec3;
 
+extern crate rand;
+
 use std::default::Default;
 
 mod camera;
@@ -36,8 +38,9 @@ fn color(r: &Ray, hittable: &Hittable) -> Vector3<f32> {
 }
 
 fn main() {
-    let nx = 800;
-    let ny = 400;
+    let nx = 200;
+    let ny = 100;
+    let ns = 100;
     let mut pixels = Vec::new();
 
     let world = HittableList {
@@ -49,17 +52,27 @@ fn main() {
 
     let camera: Camera = Default::default();
 
+    use rand::distributions::{IndependentSample, Range};
+    let jitter_range = Range::new(0.0f32, 1.0f32);
+    let mut rng = rand::thread_rng();
     for j in (0..ny).rev() {
         for i in 0..nx {
-            let u = i as f32 / nx as f32;
-            let v = j as f32 / ny as f32;
-            let r = camera.get_ray(u, v);
+            let mut col = Vector3::from_value(0.0);
+            for _ in 0..ns {
+                let u = (i as f32 + jitter_range.ind_sample(&mut rng)) / nx as f32;
+                let v = (j as f32 + jitter_range.ind_sample(&mut rng)) / ny as f32;
 
-            let color = color(&r, &world) * 255.99;
+                let r = camera.get_ray(u, v);
 
-            pixels.push(color.x as u8);
-            pixels.push(color.y as u8);
-            pixels.push(color.z as u8);
+                col += color(&r, &world);
+            }
+
+            col /= ns as f32;
+            col *= 255.99;
+
+            pixels.push(col.x as u8);
+            pixels.push(col.y as u8);
+            pixels.push(col.z as u8);
         }
     }
 
