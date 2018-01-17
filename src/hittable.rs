@@ -3,11 +3,13 @@ extern crate cgmath;
 use cgmath::Vector3;
 
 use ray::Ray;
+use materials::Material;
 
-pub struct HitRecord {
+pub struct HitRecord<'a> {
     pub t: f32,
     pub point: Vector3<f32>,
     pub normal: Vector3<f32>,
+    pub material: &'a Material,
 }
 
 pub trait Hittable {

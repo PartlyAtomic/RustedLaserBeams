@@ -2,9 +2,12 @@ extern crate cgmath;
 
 use cgmath::Vector3;
 
+use materials::Material;
+
 pub struct Sphere {
     pub center: Vector3<f32>,
     pub radius: f32,
+    pub material: Box<Material>,
 }
 
 use hittable::Hittable;
@@ -22,22 +25,27 @@ impl Hittable for Sphere {
 
         let discriminant = b * b - a * c;
 
+        use std::ops::Deref;
         if discriminant >= 0.0 {
             let solution1 = (-b - discriminant.sqrt()) / a;
             if solution1 > t_min && solution1 < t_max {
+                let point = ray.point_at_parameter(solution1);
                 return Some(HitRecord {
                     t: solution1,
-                    point: ray.point_at_parameter(solution1),
-                    normal: (ray.point_at_parameter(solution1) - self.center) / self.radius,
+                    point,
+                    normal: (point - self.center) / self.radius,
+                    material: self.material.deref(),
                 });
             }
 
             let solution2 = (-b + discriminant.sqrt()) / a;
             if solution2 > t_min && solution2 < t_max {
+                let point = ray.point_at_parameter(solution2);
                 return Some(HitRecord {
                     t: solution2,
-                    point: ray.point_at_parameter(solution2),
-                    normal: (ray.point_at_parameter(solution2) - self.center) / self.radius,
+                    point,
+                    normal: (point - self.center) / self.radius,
+                    material: self.material.deref(),
                 });
             }
         }

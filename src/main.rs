@@ -8,6 +8,8 @@ extern crate rand;
 
 use std::default::Default;
 
+pub mod materials;
+
 mod camera;
 
 use camera::Camera;
@@ -45,11 +47,16 @@ fn get_background(r: &Ray) -> Vector3<f32> {
     Vector3::from_value(1.0).lerp(vec3(0.5, 0.7, 1.0), t)
 }
 
-fn color(r: &Ray, hittable: &Hittable) -> Vector3<f32> {
+fn color(r: &Ray, hittable: &Hittable, depth: i32) -> Vector3<f32> {
     match hittable.hit(r, 0.001, 1e10) {
         Some(hit_record) => {
-            let target = hit_record.point + hit_record.normal + random_in_unit_sphere();
-            0.5 * color(&Ray { origin: hit_record.point, direction: target - hit_record.point }, hittable)
+            match hit_record.material.scatter(&r, &hit_record) {
+                Some(ref scatter) if depth <= 50 => {
+                    use cgmath::ElementWise;
+                    scatter.attenuation.mul_element_wise(color(&scatter.scattered, hittable, depth + 1))
+                }
+                _ => vec3(0.0, 0.0, 0.0)
+            }
         }
         None => get_background(r)
     }
@@ -61,10 +68,12 @@ fn main() {
     let ns = 100;
     let mut pixels = Vec::new();
 
+    use materials::lambertian::Lambertian;
+
     let world = HittableList {
         list: vec![
-            Box::new(Sphere { center: vec3(0.0, 0.0, -1.0), radius: 0.5 }),
-            Box::new(Sphere { center: vec3(0.0, -100.5, -1.0), radius: 100.0 }),
+            Box::new(Sphere { center: vec3(0.0, 0.0, -1.0), radius: 0.5, material: Box::new(Lambertian { albedo: vec3(0.5, 0.0, 0.1) }) }),
+            Box::new(Sphere { center: vec3(0.0, -100.5, -1.0), radius: 100.0, material: Box::new(Lambertian { albedo: vec3(0.1, 0.0, 0.5) }) }),
         ]
     };
 
@@ -82,7 +91,7 @@ fn main() {
 
                 let r = camera.get_ray(u, v);
 
-                col += color(&r, &world);
+                col += color(&r, &world, 0);
             }
 
             col /= ns as f32;
