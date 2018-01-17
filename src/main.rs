@@ -24,6 +24,21 @@ mod ray;
 
 use ray::Ray;
 
+fn random_in_unit_sphere() -> Vector3<f32> {
+    use rand::distributions::{IndependentSample, Range};
+
+    let mut rng = rand::thread_rng();
+    let range = Range::new(-1.0f32, 1.0f32);
+
+    // Vector out of range for now
+    let mut p = Vector3::from_value(2.0);
+
+    while p.magnitude2() >= 1.0 {
+        p = vec3(range.ind_sample(&mut rng), range.ind_sample(&mut rng), range.ind_sample(&mut rng));
+    }
+    p
+}
+
 fn get_background(r: &Ray) -> Vector3<f32> {
     let unit_direction = r.direction.normalize();
     let t = 0.5 * (unit_direction.y + 1.0);
@@ -31,8 +46,11 @@ fn get_background(r: &Ray) -> Vector3<f32> {
 }
 
 fn color(r: &Ray, hittable: &Hittable) -> Vector3<f32> {
-    match hittable.hit(r, 0.0, 1e10) {
-        Some(hit_record) => 0.5 * hit_record.normal.add_element_wise(1.0),
+    match hittable.hit(r, 0.001, 1e10) {
+        Some(hit_record) => {
+            let target = hit_record.point + hit_record.normal + random_in_unit_sphere();
+            0.5 * color(&Ray { origin: hit_record.point, direction: target - hit_record.point }, hittable)
+        }
         None => get_background(r)
     }
 }
@@ -68,6 +86,11 @@ fn main() {
             }
 
             col /= ns as f32;
+            // Apply gamma correction
+            col.x = col.x.sqrt();
+            col.y = col.y.sqrt();
+            col.z = col.z.sqrt();
+
             col *= 255.99;
 
             pixels.push(col.x as u8);
