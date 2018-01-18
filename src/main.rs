@@ -6,8 +6,6 @@ use cgmath::vec3;
 
 extern crate rand;
 
-use std::default::Default;
-
 pub mod materials;
 
 mod camera;
@@ -79,6 +77,7 @@ fn main() {
 //        ]
 //    };
 
+//    let r = (std::f32::consts::PI / 4.0).cos();
     let world = HittableList {
         list: vec![
             Box::new(Sphere { center: vec3(0.0, 0.0, -1.0), radius: 0.5, material: Box::new(Lambertian { albedo: vec3(0.1, 0.2, 0.5) }) }),
@@ -86,21 +85,27 @@ fn main() {
             Box::new(Sphere { center: vec3(1.0, 0.0, -1.0), radius: 0.5, material: Box::new(Metal { albedo: vec3(0.8, 0.6, 0.2), fuzz: 0.0 }) }),
             Box::new(Sphere { center: vec3(-1.0, 0.0, -1.0), radius: 0.5, material: Box::new(Dielectric { refraction_index: 1.5 }) }),
             Box::new(Sphere { center: vec3(-1.0, 0.0, -1.0), radius: -0.45, material: Box::new(Dielectric { refraction_index: 1.5 }) })
-
+//Box::new(Sphere { center: vec3(-r, 0.0, -1.0), radius: r, material: Box::new(Lambertian { albedo: vec3(0.0, 0.0, 1.0) }) }),
+//Box::new(Sphere { center: vec3(r, 0.0, -1.0), radius: r, material: Box::new(Lambertian { albedo: vec3(1.0, 0.0, 0.0) }) })
         ]
     };
 
-    let camera: Camera = Default::default();
+    let camera = Camera::new(
+        &vec3(-2.0, 2.0, 1.0),
+        &vec3(0.0, 0.0, -1.0),
+        &vec3(0.0, 1.0, 0.0),
+        90.0,
+        nx as f32 / ny as f32,
+    );
 
-    use rand::distributions::{IndependentSample, Range};
-    let jitter_range = Range::new(0.0f32, 1.0f32);
+    use rand::Rand;
     let mut rng = rand::thread_rng();
     for j in (0..ny).rev() {
         for i in 0..nx {
             let mut col = Vector3::from_value(0.0);
             for _ in 0..ns {
-                let u = (i as f32 + jitter_range.ind_sample(&mut rng)) / nx as f32;
-                let v = (j as f32 + jitter_range.ind_sample(&mut rng)) / ny as f32;
+                let u = (i as f32 + f32::rand(&mut rng)) / nx as f32;
+                let v = (j as f32 + f32::rand(&mut rng)) / ny as f32;
 
                 let r = camera.get_ray(u, v);
 
