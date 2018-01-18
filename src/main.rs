@@ -90,12 +90,18 @@ fn main() {
         ]
     };
 
+    let origin = vec3(3.0, 3.0, 2.0);
+    let target = vec3(0.0, 0.0, -1.0);
+    let dist_to_focus = (origin - target).magnitude();
+    let aperture = 2.0;
     let camera = Camera::new(
-        &vec3(-2.0, 2.0, 1.0),
-        &vec3(0.0, 0.0, -1.0),
-        &vec3(0.0, 1.0, 0.0),
-        90.0,
+        &origin,
+        &target,
+        &Vector3::unit_y(),
+        20.0,
         nx as f32 / ny as f32,
+        aperture,
+        dist_to_focus,
     );
 
     use rand::Rand;
