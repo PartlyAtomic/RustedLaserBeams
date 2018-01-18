@@ -15,7 +15,7 @@ pub struct Metal {
     pub fuzz: f32,
 }
 
-fn reflect(v: &Vector3<f32>, normal: &Vector3<f32>) -> Vector3<f32> {
+pub fn reflect(v: &Vector3<f32>, normal: &Vector3<f32>) -> Vector3<f32> {
     v - 2.0 * v.dot(*normal) * normal
 }
 
